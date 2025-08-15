@@ -2,30 +2,37 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+// import { setupAuth, isAuthenticated } from "./replitAuth"; // Removed
 import { insertOrderSchema, insertStockSchema } from "@shared/schema";
 import { z } from "zod";
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express): Promise<void> {
   // Auth middleware
-  await setupAuth(app);
+  // await setupAuth(app); // Removed
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      // const userId = req.user.claims.sub; // Removed
+      // const user = await storage.getUser(userId); // Removed
+      // res.json(user); // Removed
+      res.json({ message: "Auth disabled in local mode" });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
+  // Login route for local development
+  app.get('/api/login', async (req: any, res) => {
+    // In local development, just redirect to home
+    res.redirect('/home');
+  });
+
   // Initialize default data
-  app.post('/api/initialize', isAuthenticated, async (req: any, res) => {
+  app.post('/api/initialize', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      // const userId = req.user.claims.sub; // Removed
       
       // Initialize BSE stocks if not exist
       await initializeBSEStocks();
@@ -34,16 +41,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await initializeBrokers();
       
       // Create user portfolio if not exists
-      let portfolio = await storage.getUserPortfolio(userId);
-      if (!portfolio) {
-        portfolio = await storage.createPortfolio({
-          userId,
-          name: "My Trading Portfolio",
-          cashBalance: "50000", // Starting with BWP 50,000
-        });
-      }
+      // let portfolio = await storage.getUserPortfolio(userId); // Removed
+      // if (!portfolio) {
+      //   portfolio = await storage.createPortfolio({
+      //     userId,
+      //     name: "My Trading Portfolio",
+      //     cashBalance: "50000", // Starting with BWP 50,000
+      //   });
+      // }
       
-      res.json({ success: true, portfolioId: portfolio.id });
+      res.json({ success: true, message: "Initialization complete (auth disabled)" });
     } catch (error) {
       console.error("Error initializing data:", error);
       res.status(500).json({ message: "Failed to initialize data" });
@@ -86,9 +93,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Portfolio routes
-  app.get('/api/portfolio', isAuthenticated, async (req: any, res) => {
+  app.get('/api/portfolio', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      // const userId = req.user.claims.sub; // Removed
+      const userId = "local-user"; // Mock user ID for local development
       const portfolio = await storage.getUserPortfolio(userId);
       if (!portfolio) {
         return res.status(404).json({ message: "Portfolio not found" });
@@ -101,9 +109,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Order routes
-  app.post('/api/orders', isAuthenticated, async (req: any, res) => {
+  app.post('/api/orders', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      // const userId = req.user.claims.sub; // Removed
+      const userId = "local-user"; // Mock user ID for local development
       const orderData = insertOrderSchema.parse(req.body);
       
       // Get user portfolio
@@ -140,14 +149,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Create order
+      // Create order with proper field names
       const order = await storage.createOrder({
-        ...orderData,
-        userId,
+        userId: userId,
         portfolioId: portfolio.id,
+        stockId: orderData.stockId,
+        broker: orderData.broker,
+        orderType: orderData.orderType,
+        orderStyle: orderData.orderStyle || "MARKET",
+        quantity: orderData.quantity,
         price: price.toString(),
-        totalCost: finalCost.toString(),
         commission: commission.toString(),
+        status: "PENDING",
       });
 
       // Simulate order execution for market orders
@@ -165,9 +178,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/orders', isAuthenticated, async (req: any, res) => {
+  app.get('/api/orders', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      // const userId = req.user.claims.sub; // Removed
+      const userId = "local-user"; // Mock user ID for local development
       const status = req.query.status as string;
       const orders = await storage.getUserOrders(userId, status);
       res.json(orders);
@@ -177,14 +191,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/orders/:id/cancel', isAuthenticated, async (req: any, res) => {
+  app.patch('/api/orders/:id/cancel', async (req: any, res) => {
     try {
       const order = await storage.getOrder(req.params.id);
       if (!order) {
         return res.status(404).json({ message: "Order not found" });
       }
 
-      if (order.userId !== req.user.claims.sub) {
+      const userId = "local-user"; // Mock user ID for local development
+      if (order.userId !== userId) {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -210,71 +225,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch brokers" });
     }
   });
-
-  const httpServer = createServer(app);
-
-  // WebSocket server for real-time updates
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
-
-  wss.on('connection', (ws) => {
-    console.log('Client connected to trading feed');
-
-    ws.on('message', (data) => {
-      try {
-        const message = JSON.parse(data.toString());
-        if (message.type === 'subscribe') {
-          // Subscribe to specific stock updates
-          ws.send(JSON.stringify({ type: 'subscribed', symbols: message.symbols }));
-        }
-      } catch (error) {
-        console.error('WebSocket message error:', error);
-      }
-    });
-
-    ws.on('close', () => {
-      console.log('Client disconnected from trading feed');
-    });
-  });
-
-  // Simulate real-time price updates
-  setInterval(async () => {
-    try {
-      const stocks = await storage.getStocks();
-      
-      for (const stock of stocks) {
-        // Simulate price movement (-2% to +2%)
-        const currentPrice = parseFloat(stock.currentPrice);
-        const change = (Math.random() - 0.5) * 0.04; // -2% to +2%
-        const newPrice = Math.max(0.01, currentPrice * (1 + change));
-        
-        // Update stock price
-        await storage.updateStockPrice(stock.id, newPrice);
-        
-        // Add to price history
-        await storage.addPriceHistory(stock.id, newPrice, Math.floor(Math.random() * 1000));
-
-        // Broadcast to WebSocket clients
-        const priceUpdate = {
-          type: 'priceUpdate',
-          symbol: stock.symbol,
-          price: newPrice,
-          change: newPrice - currentPrice,
-          changePercent: ((newPrice - currentPrice) / currentPrice) * 100,
-          timestamp: new Date().toISOString(),
-        };
-
-        wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(priceUpdate));
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error updating prices:', error);
-    }
-  }, 5000); // Update every 5 seconds
-
-  return httpServer;
 }
 
 // Helper functions

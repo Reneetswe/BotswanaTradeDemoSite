@@ -12,7 +12,11 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // In development, make sure we're hitting the correct server
+  const baseUrl = import.meta.env.DEV ? 'http://localhost:5050' : '';
+  const fullUrl = `${baseUrl}${url}`;
+  
+  const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
@@ -29,7 +33,11 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    // In development, make sure we're hitting the correct server
+    const baseUrl = import.meta.env.DEV ? 'http://localhost:5050' : '';
+    const url = `${baseUrl}${queryKey.join("/")}`;
+    
+    const res = await fetch(url, {
       credentials: "include",
     });
 

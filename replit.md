@@ -24,7 +24,6 @@ The application follows a monolithic full-stack architecture with clear separati
 - **Runtime**: Node.js with Express.js framework
 - **Language**: TypeScript with ES modules
 - **Database ORM**: Drizzle ORM for type-safe database operations
-- **Authentication**: Replit's OpenID Connect integration with Passport.js
 - **Session Management**: Express sessions with PostgreSQL storage
 
 ## Key Components
@@ -56,11 +55,11 @@ The application follows a monolithic full-stack architecture with clear separati
 
 ## Data Flow
 
-1. **Authentication Flow**: Users authenticate via Replit OAuth, creating sessions stored in PostgreSQL
-2. **Market Data**: Stock prices are initialized with BSE data and updated through the backend
-3. **Trading Flow**: Orders are placed through the frontend, validated on the backend, and stored in the database
-4. **Portfolio Updates**: Holdings and balances are recalculated after order execution
-5. **Real-time Updates**: WebSocket connections provide live data updates to connected clients
+
+1. **Market Data**: Stock prices are initialized with BSE data and updated through the backend
+2. **Trading Flow**: Orders are placed through the frontend, validated on the backend, and stored in the database
+3. **Portfolio Updates**: Holdings and balances are recalculated after order execution
+4. **Real-time Updates**: WebSocket connections provide live data updates to connected clients
 
 ## External Dependencies
 

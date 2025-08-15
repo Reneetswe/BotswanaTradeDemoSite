@@ -3,8 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { TrendingUp, Shield, Globe, BarChart3 } from "lucide-react";
 
 export default function Landing() {
+  const handleGetStarted = () => {
+    // Show authentication options
+    window.location.href = "/auth/register";
+  };
+
   const handleLogin = () => {
-    window.location.href = "/api/login";
+    window.location.href = "/auth/login";
   };
 
   return (
@@ -17,7 +22,7 @@ export default function Landing() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">BSE Trading Platform</h1>
           </div>
           <Button onClick={handleLogin} size="lg">
-            Get Started
+            Sign In
           </Button>
         </div>
       </header>
@@ -28,15 +33,15 @@ export default function Landing() {
           Trade on the <span className="text-blue-600">Botswana Stock Exchange</span>
         </h2>
         <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-          Your local MetaTrader-style platform for BSE trading. Connect with registered brokers, 
+           Connect with registered brokers, 
           manage your portfolio, and trade BSE-listed companies digitally.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button onClick={handleLogin} size="lg" className="bg-blue-600 hover:bg-blue-700">
-            Start Trading Now
+          <Button onClick={handleGetStarted} size="lg" className="bg-blue-600 hover:bg-blue-700">
+            Get Started
           </Button>
-          <Button variant="outline" size="lg">
-            Learn More
+          <Button onClick={handleLogin} variant="outline" size="lg">
+            Sign In
           </Button>
         </div>
       </section>
@@ -132,7 +137,7 @@ export default function Landing() {
         <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
           Join thousands of Batswana investors trading on the BSE
         </p>
-        <Button onClick={handleLogin} size="lg" className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={handleGetStarted} size="lg" className="bg-blue-600 hover:bg-blue-700">
           Create Your Account
         </Button>
       </section>

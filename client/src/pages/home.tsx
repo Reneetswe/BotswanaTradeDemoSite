@@ -29,7 +29,8 @@ export default function Home() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          // In local development, redirect to landing instead
+          window.location.href = "/";
         }, 500);
         return;
       }
@@ -48,20 +49,21 @@ export default function Home() {
     }
   }, [authLoading, isAuthenticated, user]);
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated (only in production)
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (!authLoading && !isAuthenticated && !user?.error) {
       toast({
         title: "Unauthorized",
         description: "You are logged out. Logging in again...",
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/api/login";
+        // In local development, redirect to landing instead
+        window.location.href = "/";
       }, 500);
       return;
     }
-  }, [isAuthenticated, authLoading, toast]);
+  }, [isAuthenticated, authLoading, toast, user]);
 
   if (authLoading || !isAuthenticated) {
     return (

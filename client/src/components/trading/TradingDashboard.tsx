@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ export default function TradingDashboard() {
   });
 
   // Set default selected stock
-  React.useEffect(() => {
+  useEffect(() => {
     if (stocks.length > 0 && !selectedStock) {
       setSelectedStock(stocks.find((s: Stock) => s.symbol === 'LETSHEGO') || stocks[0]);
     }
