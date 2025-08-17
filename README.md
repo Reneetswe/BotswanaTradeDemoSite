@@ -76,16 +76,7 @@ A comprehensive trading platform for the Botswana Stock Exchange (BSE) with real
 
 ## 🌐 Deployment
 
-### Vercel Deployment
-1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
-
-### Railway Deployment
-1. Connect repository to Railway
-2. Add PostgreSQL database
-3. Set environment variables
-4. Deploy with one click
+1.GitHub
 
 ## 📱 Usage
 
